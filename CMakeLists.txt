@@ -46,4 +46,4 @@ target_link_libraries(http_examples ${Boost_LIBRARIES} z)
 #enable_testing()
 #add_subdirectory(tests)
 
-install(FILES server_extra.hpp server_extra_rfc.hpp DESTINATION include/simple-web-server)
+install(FILES server_extra.hpp  server_extra_rfc.hpp  server_extra_zip.hpp DESTINATION include/simple-web-server)
