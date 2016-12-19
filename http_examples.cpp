@@ -11,6 +11,7 @@
 
 #include "client_http.hpp"
 #include "server_extra.hpp"
+#include "server_extra_zip.hpp"
 
 using namespace std;
 //Added for the json-example:
@@ -35,6 +36,7 @@ void print_resp (Response &resp, Request &) {
     for (auto const &p: resp.header) {
         cout << "[RESP] " << p.first << ": " << p.second << endl;
     }
+    cout << "[RESP] Content-Length: " << resp.content.size() << endl;
     cout << "[RESP] " << resp.content << endl;
     cout << endl;
 }
@@ -98,6 +100,15 @@ int main() {
         }
         resp.content = ss.str();
         resp.mime = "text/plain; charset=us-ascii";
+    });
+
+    mux.add("^/gzip$", "GET", [](Response &resp, Request &req) {
+        ifstream is("server_extra.hpp");
+        ostringstream ss;
+        ss << is.rdbuf();
+        resp.content = ss.str();
+        resp.mime = "text/plain; charset=us-ascii";
+        SimpleWeb::plugins::deflate(resp, req);
     });
 
     mux.add_default("GET", [](Response &resp, Request &) {

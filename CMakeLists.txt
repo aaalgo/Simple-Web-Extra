@@ -22,7 +22,7 @@ if(APPLE)
 endif()
 
 add_executable(http_examples http_examples.cpp)
-target_link_libraries(http_examples ${Boost_LIBRARIES})
+target_link_libraries(http_examples ${Boost_LIBRARIES} z)
 
 #TODO: add requirement for version 1.0.1g (can it be done in one line?)
 #find_package(OpenSSL)
