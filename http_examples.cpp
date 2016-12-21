@@ -9,6 +9,7 @@
 #include <vector>
 #include <algorithm>
 
+#define SERVER_EXTRA_WITH_JSON 1
 #include "client_http.hpp"
 #include "server_extra.hpp"
 #include "server_extra_zip.hpp"

@@ -1,3 +1,5 @@
+#ifndef SERVER_EXTRA_ZIP_HPP
+#define SERVER_EXTRA_ZIP_HPP
 #include <zlib.h>
 #include <stdexcept>
 
@@ -61,3 +63,4 @@ namespace SimpleWeb {
     }
 }
 
+#endif
