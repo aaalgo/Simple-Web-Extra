@@ -97,7 +97,7 @@ namespace SimpleWeb {
         template <class socket_type>
         void add_helper (
                 // http/https server's resource["URI"] or default_resource
-                std::unordered_map<std::string,
+                std::map<std::string,
                     std::function<void(std::shared_ptr<typename ServerBase<socket_type>::Response>, std::shared_ptr<typename ServerBase<socket_type>::Request>)>> &resource,
 
                 std::string const &method,
