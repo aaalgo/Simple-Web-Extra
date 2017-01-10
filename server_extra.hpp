@@ -2,6 +2,9 @@
 #define SERVER_EXTRA_HPP
 
 #include <vector>
+#ifdef SERVER_EXTRA_WITH_JSON
+#include <json11.hpp>
+#endif
 #include "server_http.hpp"
 #ifdef SERVER_EXTRA_WITH_HTTPS
 #include "server_https.hpp"
@@ -9,6 +12,9 @@
 #include "server_extra_rfc.hpp"
 
 namespace SimpleWeb {
+#ifdef SERVER_EXTRA_WITH_JSON
+using json11::Json;
+#endif
     // SimpleMux is a wrapper for HTTP & HTTP server of 
     // the Simple-Web-Server package.
     // It is intended to make it easy for common cases when
@@ -111,6 +117,56 @@ namespace SimpleWeb {
                 resp.dump<socket_type>(presp);   // convert our response to Simple-Web-Server's response
             };
         }
+#ifdef SERVER_EXTRA_WITH_JSON
+        typedef std::function<void(Json &, Json &)> JsonHandler;
+        void handle_json_request (Response &resp, Request &req, JsonHandler handler) const {
+            try {
+                for (auto &p: plugins_before) {
+                    p(resp, req);
+                }
+                Json input, output;
+                if (req.content.size()) {
+                    std::string err;
+                    input = Json::parse(req.content, err);
+                    if (err.size()) {
+                        throw std::runtime_error("json error: " + err);
+                    }
+                }
+                handler(output, input);
+                resp.mime = "application/javascript";
+                resp.content = output.dump();
+                for (auto &p: plugins_after) {
+                    p(resp, req);
+                }
+            }
+            catch (std::exception const &e) {
+                resp.status = 404;
+                resp.content = "{}";
+            }
+            catch (...) {
+                resp.status = 404;
+                resp.content = "{}";
+            }
+        }
+
+        template <class socket_type>
+        void add_json_helper (
+                // http/https server's resource["URI"] or default_resource
+                std::map<std::string,
+                    std::function<void(std::shared_ptr<typename ServerBase<socket_type>::Response>, std::shared_ptr<typename ServerBase<socket_type>::Request>)>> &resource,
+
+                std::string const &method,
+                JsonHandler handler) {
+
+            resource[method] = [this, handler](std::shared_ptr<typename ServerBase<socket_type>::Response> presp, std::shared_ptr<typename ServerBase<socket_type>::Request> preq) {
+                Request req;
+                Response resp;
+                req.load<socket_type>(preq);  // convert Simple-Web-Server's request to our request
+                handle_json_request(resp, req, handler);
+                resp.dump<socket_type>(presp);   // convert our response to Simple-Web-Server's response
+            };
+        }
+#endif
 
     public:
 #ifdef SERVER_EXTRA_WITH_HTTPS
@@ -154,6 +210,22 @@ namespace SimpleWeb {
             }
 #endif
         }
+
+#ifdef SERVER_EXTRA_WITH_JSON
+        void add_json_api (std::string const &resource,
+                  std::string const &method,
+                  JsonHandler handler) {
+            if (http_server) {
+                add_json_helper<HTTP>(http_server->resource[resource], method, handler);
+            }
+#ifdef SERVER_EXTRA_WITH_HTTPS
+            if (https_server) {
+                add_json_helper<HTTPS>(https_server->resource[resource], method, handler);
+            }
+#endif
+        }
+#endif
+
     };
 }
 
